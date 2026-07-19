@@ -1,0 +1,86 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <h2>{{ 'モニター編集' if monitor else 'モニター追加' }}</h2>
+  <form method="post" action="{{ '/admin/monitors/' ~ monitor.id ~ '/edit' if monitor else '/admin/monitors/new' }}">
+    <label>名前</label>
+    <input type="text" name="name" value="{{ monitor.name if monitor else '' }}" required>
+
+    <label>タイプ</label>
+    <select name="type" id="type-select" {{ 'disabled' if monitor }} required>
+      {% for t in monitor_types %}
+        <option value="{{ t.value }}" {{ 'selected' if monitor and monitor.type == t }}>{{ t.value }}</option>
+      {% endfor %}
+    </select>
+    {% if monitor %}<input type="hidden" name="type" value="{{ monitor.type.value }}">{% endif %}
+
+    <div class="type-fields" data-type="proxmox_vm">
+      <label>Proxmoxホスト</label>
+      <input type="text" name="host" value="{{ monitor.config.get('host','') if monitor and monitor.type.value=='proxmox_vm' else '' }}" placeholder="proxmox.example.com">
+      <label>ポート</label>
+      <input type="number" name="port" value="{{ monitor.config.get('port', 8006) if monitor and monitor.type.value=='proxmox_vm' else 8006 }}">
+      <label>ノード名</label>
+      <input type="text" name="node" value="{{ monitor.config.get('node','') if monitor and monitor.type.value=='proxmox_vm' else '' }}">
+      <label>VMID</label>
+      <input type="number" name="vmid" value="{{ monitor.config.get('vmid','') if monitor and monitor.type.value=='proxmox_vm' else '' }}">
+      <label>種別</label>
+      <select name="resource_type">
+        <option value="qemu" {{ 'selected' if monitor and monitor.config.get('resource_type')=='qemu' }}>QEMU (VM)</option>
+        <option value="lxc" {{ 'selected' if monitor and monitor.config.get('resource_type')=='lxc' }}>LXC</option>
+      </select>
+      <label>APIトークンID (user@realm!tokenname)</label>
+      <input type="text" name="token_id" value="{{ monitor.config.get('token_id','') if monitor and monitor.type.value=='proxmox_vm' else '' }}">
+      <label>APIトークンシークレット</label>
+      <input type="text" name="token_secret" value="{{ monitor.config.get('token_secret','') if monitor and monitor.type.value=='proxmox_vm' else '' }}">
+      <div class="checkbox-row"><input type="checkbox" name="verify_ssl" {{ 'checked' if not monitor or monitor.config.get('verify_ssl', True) }}><label>SSL証明書を検証する</label></div>
+    </div>
+
+    <div class="type-fields" data-type="vps">
+      <label>ホスト(IP/ドメイン)</label>
+      <input type="text" name="host" value="{{ monitor.config.get('host','') if monitor and monitor.type.value=='vps' else '' }}">
+      <label>ポート</label>
+      <input type="number" name="port" value="{{ monitor.config.get('port', 22) if monitor and monitor.type.value=='vps' else 22 }}">
+      <div class="checkbox-row"><input type="checkbox" name="ping_enabled" {{ 'checked' if not monitor or monitor.config.get('ping_enabled', True) }}><label>ping判定を使う</label></div>
+      <div class="checkbox-row"><input type="checkbox" name="tcp_enabled" {{ 'checked' if not monitor or monitor.config.get('tcp_enabled', True) }}><label>TCPポート判定を使う</label></div>
+    </div>
+
+    <div class="type-fields" data-type="webpage">
+      <label>URL</label>
+      <input type="url" name="url" value="{{ monitor.config.get('url','') if monitor and monitor.type.value=='webpage' else '' }}" placeholder="https://example.com">
+      <label>タイムアウト(秒)</label>
+      <input type="number" name="timeout_seconds" value="{{ monitor.config.get('timeout_seconds', 10) if monitor and monitor.type.value=='webpage' else 10 }}">
+      <label>この値未満のHTTPステータスを正常とみなす</label>
+      <input type="number" name="expect_status_below" value="{{ monitor.config.get('expect_status_below', 500) if monitor and monitor.type.value=='webpage' else 500 }}">
+    </div>
+
+    <div class="type-fields" data-type="discord_bot">
+      <label>Discord サーバー(Guild) ID</label>
+      <input type="text" name="guild_id" value="{{ monitor.config.get('guild_id','') if monitor and monitor.type.value=='discord_bot' else '' }}">
+      <label>BOTのユーザー名</label>
+      <input type="text" name="bot_username" value="{{ monitor.config.get('bot_username','') if monitor and monitor.type.value=='discord_bot' else '' }}">
+      <p style="color: var(--muted); font-size: 0.8rem;">対象サーバーの「サーバー設定 &gt; ウィジェット」を有効化しておく必要があります。</p>
+    </div>
+
+    <div class="type-fields" data-type="minecraft">
+      <label>アドレス(host:port)</label>
+      <input type="text" name="address" value="{{ monitor.config.get('address','') if monitor and monitor.type.value=='minecraft' else '' }}" placeholder="mc.example.com:25565">
+      <label>エディション</label>
+      <select name="edition">
+        <option value="java" {{ 'selected' if monitor and monitor.config.get('edition')=='java' }}>Java Edition</option>
+        <option value="bedrock" {{ 'selected' if monitor and monitor.config.get('edition')=='bedrock' }}>Bedrock Edition</option>
+      </select>
+    </div>
+
+    <label>監視間隔(秒)</label>
+    <input type="number" name="check_interval_seconds" value="{{ monitor.check_interval_seconds if monitor else 60 }}" min="10" required>
+
+    <label>連続失敗しきい値(何回連続失敗で障害通知するか)</label>
+    <input type="number" name="failure_threshold" value="{{ monitor.failure_threshold if monitor else 1 }}" min="1" required>
+
+    <div class="checkbox-row"><input type="checkbox" name="enabled" {{ 'checked' if not monitor or monitor.enabled }}><label>監視を有効にする</label></div>
+    <div class="checkbox-row"><input type="checkbox" name="show_on_status_page" {{ 'checked' if not monitor or monitor.show_on_status_page }}><label>公開ステータスページに表示する</label></div>
+
+    <button class="btn" type="submit">保存</button>
+  </form>
+
+  <script src="/static/js/admin.js"></script>
+{% endblock %}

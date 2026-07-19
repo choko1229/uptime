@@ -1,0 +1,152 @@
+{
+  "_comment": "Custom Pterodactyl egg for this uptime monitor app. Import via Admin > Nests > Import Egg.",
+  "meta": {
+    "version": "PTDL_v2"
+  },
+  "name": "Uptime Monitor",
+  "author": "admin@example.com",
+  "description": "Self-hosted uptime monitor (FastAPI + MySQL/MariaDB).",
+  "docker_images": {
+    "Python 3.12": "ghcr.io/parkervcp/yolks:python_3.12"
+  },
+  "startup": "pip install -r requirements.txt --no-input && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port {{SERVER_PORT}}",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\": \"Application startup complete\"}",
+    "logs": "{}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\napt-get update && apt-get install -y git\ncd /mnt/server\nif [ -z \"$(ls -A /mnt/server)\" ]; then\n  git clone \"${GIT_REPOSITORY_URL}\" --branch \"${GIT_BRANCH}\" .\nfi\npip install -r requirements.txt --no-input\necho \"Install complete. Set DATABASE_* and SECRET_KEY variables, then (re)start the server.\"\n",
+      "container": "python:3.12-slim",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "Git repository URL",
+      "description": "Repository to clone this app from on first install.",
+      "env_variable": "GIT_REPOSITORY_URL",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Git branch",
+      "description": "Branch to check out.",
+      "env_variable": "GIT_BRANCH",
+      "default_value": "main",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Database host",
+      "description": "Pterodactyl Database Host address for the assigned MySQL/MariaDB database.",
+      "env_variable": "DATABASE_HOST",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Database port",
+      "env_variable": "DATABASE_PORT",
+      "default_value": "3306",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|numeric"
+    },
+    {
+      "name": "Database name",
+      "env_variable": "DATABASE_NAME",
+      "default_value": "uptime",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Database user",
+      "env_variable": "DATABASE_USER",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Database password",
+      "env_variable": "DATABASE_PASSWORD",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "Secret key",
+      "description": "Random long string used to sign session cookies.",
+      "env_variable": "SECRET_KEY",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "required|string"
+    },
+    {
+      "name": "PageSpeed API key",
+      "env_variable": "PAGESPEED_API_KEY",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string"
+    },
+    {
+      "name": "SMTP host",
+      "env_variable": "SMTP_HOST",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string"
+    },
+    {
+      "name": "SMTP port",
+      "env_variable": "SMTP_PORT",
+      "default_value": "587",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|numeric"
+    },
+    {
+      "name": "SMTP username",
+      "env_variable": "SMTP_USERNAME",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string"
+    },
+    {
+      "name": "SMTP password",
+      "env_variable": "SMTP_PASSWORD",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "nullable|string"
+    },
+    {
+      "name": "SMTP from address",
+      "env_variable": "SMTP_FROM_ADDRESS",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string"
+    },
+    {
+      "name": "Site title",
+      "env_variable": "SITE_TITLE",
+      "default_value": "Status",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string"
+    }
+  ]
+}

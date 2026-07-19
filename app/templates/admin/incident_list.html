@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <div class="monitor-row" style="margin-bottom: 1rem;">
+    <h2>障害管理</h2>
+    <a class="btn" href="/admin/incidents/new">+ 障害を作成</a>
+  </div>
+
+  {% for incident in incidents %}
+    <div class="card">
+      <div class="monitor-row">
+        <div>
+          <span class="badge {{ incident.status.value }}">{{ incident.status.value }}</span>
+          <strong>{{ incident.title }}</strong>
+          {% if incident.monitor %}<span style="color: var(--muted); font-size: 0.8rem;">({{ incident.monitor.name }})</span>{% endif %}
+          {% if not incident.is_published %}<span class="badge investigating">非公開</span>{% endif %}
+        </div>
+        <a class="btn secondary" href="/admin/incidents/{{ incident.id }}">詳細</a>
+      </div>
+      <p style="color: var(--muted); font-size: 0.85rem;">発生: {{ incident.started_at }}</p>
+    </div>
+  {% else %}
+    <p style="color: var(--muted);">障害はまだ登録されていません。</p>
+  {% endfor %}
+{% endblock %}

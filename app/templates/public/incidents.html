@@ -1,0 +1,29 @@
+{% extends "public/base.html" %}
+{% block content %}
+  <h2>障害履歴</h2>
+  {% for incident in incidents %}
+    <div class="card">
+      <span class="badge {{ incident.status.value }}">{{ incident.status.value }}</span>
+      {% if incident.monitor %}<span style="color: var(--muted); font-size: 0.85rem;">{{ incident.monitor.name }}</span>{% endif %}
+      <h3>{{ incident.title }}</h3>
+      <p style="color: var(--muted); font-size: 0.85rem;">
+        発生: {{ incident.started_at }}
+        {% if incident.resolved_at %} / 復旧: {{ incident.resolved_at }}{% endif %}
+      </p>
+      <p>{{ incident.description }}</p>
+      {% if incident.updates %}
+        <ul>
+          {% for update in incident.updates %}
+            <li>
+              <span class="badge {{ update.status.value }}">{{ update.status.value }}</span>
+              <span style="color: var(--muted); font-size: 0.8rem;">{{ update.created_at }}</span>
+              — {{ update.message }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% else %}
+    <p style="color: var(--muted);">過去の障害はありません。</p>
+  {% endfor %}
+{% endblock %}

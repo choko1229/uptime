@@ -1,0 +1,53 @@
+{% extends "public/base.html" %}
+{% block content %}
+  {% if overall_up %}
+    <div class="summary-banner up">✅ すべてのシステムは正常に稼働しています</div>
+  {% else %}
+    <div class="summary-banner down">⚠️ 一部のシステムで問題が発生しています</div>
+  {% endif %}
+
+  {% if ongoing_incidents %}
+    <div class="card">
+      <h3>現在発生中の障害</h3>
+      {% for incident in ongoing_incidents %}
+        <p>
+          <span class="badge {{ incident.status.value }}">{{ incident.status.value }}</span>
+          <strong>{{ incident.title }}</strong><br>
+          <span style="color: var(--muted); font-size: 0.85rem;">{{ incident.started_at }}</span><br>
+          {{ incident.description }}
+        </p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% for row in monitor_rows %}
+    {% set monitor = row.monitor %}
+    {% set latest = row.latest %}
+    <div class="card">
+      <div class="monitor-row">
+        <div>
+          <span class="status-dot {{ 'up' if monitor.last_status and monitor.last_status.value == 'up' else ('down' if monitor.last_status and monitor.last_status.value == 'down' else 'unknown') }}"></span>
+          <strong>{{ monitor.name }}</strong>
+          <span style="color: var(--muted); font-size: 0.8rem;">({{ monitor.type.value }})</span>
+        </div>
+        <div class="uptime-figures">
+          30日: {{ row.uptime_30 if row.uptime_30 is not none else '-' }}%
+          &nbsp;/&nbsp;
+          90日: {{ row.uptime_90 if row.uptime_90 is not none else '-' }}%
+        </div>
+      </div>
+      {% if latest and monitor.type.value == 'proxmox_vm' %}
+        <div class="load-bars">
+          {% if latest.detail.cpu_percent is not none %}<span>CPU: {{ latest.detail.cpu_percent }}%</span>{% endif %}
+          {% if latest.detail.mem_percent is not none %}<span>メモリ: {{ latest.detail.mem_percent }}%</span>{% endif %}
+          {% if latest.detail.disk_percent is not none %}<span>ディスク: {{ latest.detail.disk_percent }}%</span>{% endif %}
+        </div>
+      {% endif %}
+      {% if latest and monitor.type.value == 'minecraft' and latest.detail.players_online is not none %}
+        <div class="load-bars"><span>プレイヤー: {{ latest.detail.players_online }}/{{ latest.detail.players_max }}</span></div>
+      {% endif %}
+    </div>
+  {% else %}
+    <p style="color: var(--muted);">公開中の監視対象はまだありません。</p>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <h2>障害を作成</h2>
+  <form method="post" action="/admin/incidents/new">
+    <label>タイトル</label>
+    <input type="text" name="title" required>
+
+    <label>対象モニター(任意)</label>
+    <select name="monitor_id">
+      <option value="">- 選択なし -</option>
+      {% for monitor in monitors %}
+        <option value="{{ monitor.id }}">{{ monitor.name }}</option>
+      {% endfor %}
+    </select>
+
+    <label>状況</label>
+    <select name="status">
+      <option value="investigating">調査中 (investigating)</option>
+      <option value="monitoring">監視中 (monitoring)</option>
+      <option value="resolved">解決済み (resolved)</option>
+    </select>
+
+    <label>理由・詳細</label>
+    <textarea name="description" rows="5" required></textarea>
+
+    <div class="checkbox-row"><input type="checkbox" name="is_published" checked><label>公開ページに掲載する</label></div>
+
+    <button class="btn" type="submit">作成</button>
+  </form>
+{% endblock %}

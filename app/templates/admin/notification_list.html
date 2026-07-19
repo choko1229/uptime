@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <h2>通知チャンネル</h2>
+  {% for channel in channels %}
+    <div class="card">
+      <div class="monitor-row">
+        <div>
+          <strong>{{ channel.name }}</strong>
+          <span style="color: var(--muted); font-size: 0.8rem;">({{ channel.type.value }})</span>
+          {% if not channel.enabled %}<span class="badge investigating">無効</span>{% endif %}
+        </div>
+        <form class="inline" method="post" action="/admin/notifications/{{ channel.id }}/delete" onsubmit="return confirm('削除しますか?');">
+          <button class="btn danger" type="submit">削除</button>
+        </form>
+      </div>
+    </div>
+  {% else %}
+    <p style="color: var(--muted);">通知チャンネルがまだ登録されていません。</p>
+  {% endfor %}
+
+  <div class="card">
+    <h3>チャンネルを追加</h3>
+    <form method="post" action="/admin/notifications/new">
+      <label>名前</label>
+      <input type="text" name="name" required>
+      <label>種別</label>
+      <select name="type" id="notif-type-select">
+        <option value="discord_webhook">Discord Webhook</option>
+        <option value="email">メール</option>
+      </select>
+      <div id="notif-discord_webhook" class="type-fields active" data-type="discord_webhook">
+        <label>Webhook URL</label>
+        <input type="url" name="webhook_url" placeholder="https://discord.com/api/webhooks/...">
+      </div>
+      <div id="notif-email" class="type-fields" data-type="email">
+        <label>送信先メールアドレス</label>
+        <input type="email" name="to_address">
+      </div>
+      <div class="checkbox-row"><input type="checkbox" name="enabled" checked><label>有効にする</label></div>
+      <button class="btn" type="submit">追加</button>
+    </form>
+  </div>
+  <script>
+    const notifSelect = document.getElementById("notif-type-select");
+    notifSelect.addEventListener("change", () => {
+      document.querySelectorAll("#notif-discord_webhook, #notif-email").forEach((el) => {
+        el.classList.toggle("active", el.dataset.type === notifSelect.value);
+      });
+    });
+  </script>
+
+  <h2 style="margin-top: 2rem;">モニターごとの通知先</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>モニター</th>
+        {% for channel in channels %}<th>{{ channel.name }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for monitor in monitors %}
+        <tr>
+          <td>{{ monitor.name }}</td>
+          {% for channel in channels %}
+            <td>
+              <form method="post" action="/admin/notifications/link">
+                <input type="hidden" name="monitor_id" value="{{ monitor.id }}">
+                <input type="hidden" name="channel_id" value="{{ channel.id }}">
+                <button class="btn {{ 'secondary' if (monitor.id, channel.id) not in linked_pairs }}" type="submit" style="padding: 0.25rem 0.6rem;">
+                  {{ '✓' if (monitor.id, channel.id) in linked_pairs else '-' }}
+                </button>
+              </form>
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

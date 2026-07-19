@@ -1,0 +1,34 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <div class="monitor-row" style="margin-bottom: 1rem;">
+    <h2>モニター一覧</h2>
+    <a class="btn" href="/admin/monitors/new">+ モニター追加</a>
+  </div>
+
+  {% for monitor in monitors %}
+    {% set latest = latest_by_monitor.get(monitor.id) %}
+    <div class="card">
+      <div class="monitor-row">
+        <div>
+          <span class="status-dot {{ 'up' if monitor.last_status and monitor.last_status.value == 'up' else ('down' if monitor.last_status and monitor.last_status.value == 'down' else 'unknown') }}"></span>
+          <strong>{{ monitor.name }}</strong>
+          <span style="color: var(--muted); font-size: 0.8rem;">({{ monitor.type.value }})</span>
+          {% if not monitor.enabled %}<span class="badge investigating">無効</span>{% endif %}
+          {% if not monitor.show_on_status_page %}<span class="badge monitoring">非公開</span>{% endif %}
+        </div>
+        <div>
+          <a class="btn secondary" href="/admin/monitors/{{ monitor.id }}/edit">編集</a>
+          <form class="inline" method="post" action="/admin/monitors/{{ monitor.id }}/delete" onsubmit="return confirm('削除しますか?');">
+            <button class="btn danger" type="submit">削除</button>
+          </form>
+        </div>
+      </div>
+      <p style="color: var(--muted); font-size: 0.85rem;">
+        間隔: {{ monitor.check_interval_seconds }}秒 / しきい値: {{ monitor.failure_threshold }}回連続失敗
+        {% if latest %} / 直近チェック: {{ latest.checked_at }} ({{ latest.status.value }}){% endif %}
+      </p>
+    </div>
+  {% else %}
+    <p style="color: var(--muted);">モニターがまだ登録されていません。</p>
+  {% endfor %}
+{% endblock %}

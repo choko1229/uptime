@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block content %}
+  <div class="monitor-row">
+    <h2>{{ incident.title }}</h2>
+    <form method="post" action="/admin/incidents/{{ incident.id }}/publish_toggle">
+      <button class="btn secondary" type="submit">{{ '非公開にする' if incident.is_published else '公開する' }}</button>
+    </form>
+  </div>
+  <p>
+    <span class="badge {{ incident.status.value }}">{{ incident.status.value }}</span>
+    {% if incident.monitor %}<span style="color: var(--muted);">{{ incident.monitor.name }}</span>{% endif %}
+  </p>
+  <div class="card">
+    <p style="color: var(--muted); font-size: 0.85rem;">
+      発生: {{ incident.started_at }}
+      {% if incident.resolved_at %} / 復旧: {{ incident.resolved_at }}{% endif %}
+    </p>
+    <p>{{ incident.description }}</p>
+  </div>
+
+  <h3>更新履歴</h3>
+  {% for update in incident.updates %}
+    <div class="card">
+      <span class="badge {{ update.status.value }}">{{ update.status.value }}</span>
+      <span style="color: var(--muted); font-size: 0.8rem;">{{ update.created_at }}</span>
+      <p>{{ update.message }}</p>
+    </div>
+  {% endfor %}
+
+  <h3>更新を追加</h3>
+  <form method="post" action="/admin/incidents/{{ incident.id }}/update">
+    <label>状況</label>
+    <select name="status">
+      <option value="investigating">調査中 (investigating)</option>
+      <option value="monitoring">監視中 (monitoring)</option>
+      <option value="resolved">解決済み (resolved)</option>
+    </select>
+    <label>メッセージ</label>
+    <textarea name="message" rows="3" required></textarea>
+    <button class="btn" type="submit">追加</button>
+  </form>
+{% endblock %}

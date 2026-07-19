@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理画面 - {{ site_title | default('Uptime Monitor') }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>管理画面</h1>
+    <nav class="admin-nav">
+      <a href="/admin">ダッシュボード</a>
+      <a href="/admin/incidents">障害管理</a>
+      <a href="/admin/notifications">通知設定</a>
+      <a href="/" target="_blank">公開ページ</a>
+      <form class="inline" method="post" action="/admin/logout">
+        <button class="btn secondary" type="submit">ログアウト</button>
+      </form>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
