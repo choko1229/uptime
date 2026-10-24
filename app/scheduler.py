@@ -85,7 +85,11 @@ async def _send_status_notifications(monitor_id: int, *, up: bool) -> None:
         )
         for channel in channels:
             await notify(
-                channel, title=title, description=description, status="up" if up else "down"
+                db,
+                channel,
+                title=title,
+                description=description,
+                status="up" if up else "down",
             )
 
 

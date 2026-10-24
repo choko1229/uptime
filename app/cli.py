@@ -3,13 +3,16 @@ import asyncio
 import click
 from sqlalchemy import select
 
+from app import db as db_module
 from app.auth import hash_password
-from app.db import async_session_maker
 from app.models import User
 
 
 async def _create_admin(username: str, password: str) -> None:
-    async with async_session_maker() as db:
+    if not db_module.is_configured():
+        click.echo("Database is not configured yet. Complete /setup in the running app first.")
+        raise SystemExit(1)
+    async with db_module.async_session_maker() as db:
         existing = await db.scalar(select(User).where(User.username == username))
         if existing:
             existing.password_hash = hash_password(password)

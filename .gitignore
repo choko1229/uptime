@@ -127,6 +127,9 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# App runtime data (secret key, DB connection saved via /setup) - never commit
+data/
+
 # Environments
 .env
 .venv/

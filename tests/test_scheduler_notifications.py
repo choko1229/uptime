@@ -46,7 +46,7 @@ async def test_notification_fires_once_threshold_crossed_and_not_before(flaky_mo
     down = CheckOutcome(status=CheckStatus.DOWN, response_time_ms=10, detail={})
     sent = []
 
-    async def fake_notify(channel, *, title, description, status):
+    async def fake_notify(db, channel, *, title, description, status):
         sent.append(status)
 
     with patch("app.scheduler.run_check", new=AsyncMock(return_value=down)), patch(
@@ -68,7 +68,7 @@ async def test_recovery_notification_fires_once(flaky_monitor):
     up = CheckOutcome(status=CheckStatus.UP, response_time_ms=10, detail={})
     sent = []
 
-    async def fake_notify(channel, *, title, description, status):
+    async def fake_notify(db, channel, *, title, description, status):
         sent.append(status)
 
     with patch("app.scheduler.run_check", new=AsyncMock(return_value=down)), patch(

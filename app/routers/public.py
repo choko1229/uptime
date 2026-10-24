@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.config import get_settings
+from app.app_settings import get_app_settings
 from app.db import get_db
 from app.models import CheckResult, CheckStatus, Incident, Monitor
 from app.uptime_calc import calculate_uptime_percent
@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/")
 async def status_page(request: Request, db: AsyncSession = Depends(get_db)):
-    settings = get_settings()
+    app_settings = await get_app_settings(db)
     result = await db.execute(
         select(Monitor)
         .where(Monitor.show_on_status_page.is_(True))
@@ -59,7 +59,7 @@ async def status_page(request: Request, db: AsyncSession = Depends(get_db)):
         request,
         "public/status.html",
         {
-            "site_title": settings.site_title,
+            "site_title": app_settings.site_title,
             "monitor_rows": monitor_rows,
             "overall_up": overall_up,
             "ongoing_incidents": ongoing_incidents,
@@ -69,7 +69,7 @@ async def status_page(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/incidents")
 async def incident_history(request: Request, db: AsyncSession = Depends(get_db)):
-    settings = get_settings()
+    app_settings = await get_app_settings(db)
     result = await db.execute(
         select(Incident)
         .options(selectinload(Incident.updates), selectinload(Incident.monitor))
@@ -80,5 +80,5 @@ async def incident_history(request: Request, db: AsyncSession = Depends(get_db))
     return templates.TemplateResponse(
         request,
         "public/incidents.html",
-        {"site_title": settings.site_title, "incidents": incidents},
+        {"site_title": app_settings.site_title, "incidents": incidents},
     )

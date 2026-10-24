@@ -3,9 +3,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.config import get_settings
 from app.db import Base
 from app import models  # noqa: F401 - ensures models are registered on Base.metadata
+from app.runtime_config import build_database_url, load_database_config
 
 config = context.config
 
@@ -14,8 +14,16 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.database_url_sync)
+if not config.get_main_option("sqlalchemy.url"):
+    db_config = load_database_config()
+    if db_config is None:
+        raise RuntimeError(
+            "No database configured. Complete /setup in the running app first, "
+            "or pass -x db_url=mysql+pymysql://... to alembic."
+        )
+    config.set_main_option(
+        "sqlalchemy.url", build_database_url(db_config, driver="mysql+pymysql")
+    )
 
 
 def run_migrations_offline() -> None:

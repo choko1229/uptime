@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.app_settings import get_app_settings, update_app_settings
+from app.auth import hash_password
 from app.db import get_db
 from app.deps import require_admin
 from app.models import (
@@ -19,6 +21,7 @@ from app.models import (
     MonitorType,
     NotificationChannel,
     NotificationType,
+    User,
 )
 from app.scheduler import schedule_monitor, unschedule_monitor
 
@@ -289,3 +292,67 @@ async def notification_link_toggle(request: Request, db: AsyncSession = Depends(
         db.add(MonitorNotification(monitor_id=monitor_id, channel_id=channel_id))
     await db.commit()
     return RedirectResponse(url="/admin/notifications", status_code=303)
+
+
+# --- App settings ---
+
+
+@router.get("/settings")
+async def settings_form(
+    request: Request, db: AsyncSession = Depends(get_db), username: str = Depends(require_admin)
+):
+    app_settings = await get_app_settings(db)
+    return templates.TemplateResponse(
+        request,
+        "admin/settings.html",
+        {"settings": app_settings, "username": username, "password_error": None, "password_ok": False},
+    )
+
+
+@router.post("/settings")
+async def settings_submit(request: Request, db: AsyncSession = Depends(get_db)):
+    form = dict(await request.form())
+    await update_app_settings(
+        db,
+        site_title=form.get("site_title") or "Uptime Monitor",
+        pagespeed_api_key=form.get("pagespeed_api_key", ""),
+        smtp_host=form.get("smtp_host", ""),
+        smtp_port=int(form.get("smtp_port") or 587),
+        smtp_username=form.get("smtp_username", ""),
+        smtp_password=form.get("smtp_password", ""),
+        smtp_from_address=form.get("smtp_from_address", ""),
+        smtp_use_tls=form.get("smtp_use_tls") == "on",
+    )
+    return RedirectResponse(url="/admin/settings", status_code=303)
+
+
+@router.post("/settings/password")
+async def change_password(
+    request: Request, db: AsyncSession = Depends(get_db), username: str = Depends(require_admin)
+):
+    form = dict(await request.form())
+    new_password = form.get("new_password", "")
+    confirm_password = form.get("confirm_password", "")
+    app_settings = await get_app_settings(db)
+
+    if len(new_password) < 8 or new_password != confirm_password:
+        return templates.TemplateResponse(
+            request,
+            "admin/settings.html",
+            {
+                "settings": app_settings,
+                "username": username,
+                "password_error": "パスワードは8文字以上で、確認用と一致している必要があります。",
+                "password_ok": False,
+            },
+            status_code=400,
+        )
+
+    user = await db.scalar(select(User).where(User.username == username))
+    user.password_hash = hash_password(new_password)
+    await db.commit()
+    return templates.TemplateResponse(
+        request,
+        "admin/settings.html",
+        {"settings": app_settings, "username": username, "password_error": None, "password_ok": True},
+    )

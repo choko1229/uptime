@@ -13,7 +13,9 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/admin/login")
 async def login_form(request: Request):
     return templates.TemplateResponse(
-        request, "admin/login.html", {"error": None}
+        request,
+        "admin/login.html",
+        {"error": None, "setup_done": request.query_params.get("setup") == "done"},
     )
 
 

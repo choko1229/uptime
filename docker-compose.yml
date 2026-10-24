@@ -19,12 +19,8 @@ services:
   app:
     build: .
     env_file: .env
-    environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 3306
-      DATABASE_NAME: uptime
-      DATABASE_USER: uptime
-      DATABASE_PASSWORD: uptime
+    volumes:
+      - app_data:/app/data
     ports:
       - "8000:8000"
     depends_on:
@@ -33,3 +29,4 @@ services:
 
 volumes:
   db_data:
+  app_data:

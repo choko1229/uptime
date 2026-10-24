@@ -3,7 +3,7 @@ import logging
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
+from app.app_settings import get_app_settings
 from app.models import Monitor, PageSpeedResult
 
 logger = logging.getLogger(__name__)
@@ -19,9 +19,12 @@ _CATEGORY_TO_FIELD = {
 
 
 async def measure_pagespeed(db: AsyncSession, monitor: Monitor) -> PageSpeedResult | None:
-    settings = get_settings()
-    if not settings.pagespeed_api_key:
-        logger.info("PAGESPEED_API_KEY not set; skipping PageSpeed check for monitor %s", monitor.id)
+    app_settings = await get_app_settings(db)
+    if not app_settings.pagespeed_api_key:
+        logger.info(
+            "PageSpeed API key not set (see /admin/settings); skipping check for monitor %s",
+            monitor.id,
+        )
         return None
 
     url = monitor.config.get("url")
@@ -30,7 +33,7 @@ async def measure_pagespeed(db: AsyncSession, monitor: Monitor) -> PageSpeedResu
 
     params = {
         "url": url,
-        "key": settings.pagespeed_api_key,
+        "key": app_settings.pagespeed_api_key,
         "category": ["PERFORMANCE", "ACCESSIBILITY", "BEST_PRACTICES", "SEO"],
     }
     try:

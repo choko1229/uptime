@@ -10,6 +10,11 @@
   <main style="max-width: 360px; margin-top: 4rem;">
     <div class="card">
       <h2>管理画面ログイン</h2>
+      {% if setup_done %}
+        <p style="color: var(--up); font-size: 0.85rem;">
+          セットアップが完了しました。管理者アカウントのユーザー名・パスワードはサーバーの起動ログに表示されています。
+        </p>
+      {% endif %}
       {% if error %}<p class="error">{{ error }}</p>{% endif %}
       <form method="post" action="/admin/login">
         <label>ユーザー名</label>

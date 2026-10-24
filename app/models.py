@@ -50,6 +50,22 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+class AppSettings(Base):
+    """Single-row table (id is always 1) holding app-wide settings editable via /admin/settings."""
+
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    site_title: Mapped[str] = mapped_column(String(128), default="Uptime Monitor")
+    pagespeed_api_key: Mapped[str] = mapped_column(String(255), default="")
+    smtp_host: Mapped[str] = mapped_column(String(255), default="")
+    smtp_port: Mapped[int] = mapped_column(Integer, default=587)
+    smtp_username: Mapped[str] = mapped_column(String(255), default="")
+    smtp_password: Mapped[str] = mapped_column(String(255), default="")
+    smtp_from_address: Mapped[str] = mapped_column(String(255), default="")
+    smtp_use_tls: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
 class Monitor(Base):
     __tablename__ = "monitors"
 

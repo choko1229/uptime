@@ -1,9 +1,18 @@
 import httpx
 
+from app.models import AppSettings
+
 STATUS_COLORS = {"up": 0x2ECC71, "down": 0xE74C3C}
 
 
-async def send(config: dict, *, title: str, description: str, status: str) -> None:
+async def send(
+    config: dict,
+    *,
+    title: str,
+    description: str,
+    status: str,
+    app_settings: AppSettings | None = None,
+) -> None:
     webhook_url: str = config["webhook_url"]
     payload = {
         "embeds": [
